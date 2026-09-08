@@ -251,6 +251,24 @@
   .legenda:nth-child(even){transform:rotate(-.5deg)}
   @keyframes entra{from{opacity:0; transform:translateY(7px)} to{opacity:1}}
 
+  /* ---------- aviso da legenda (aparece e some) ---------- */
+  .aviso-legenda{
+    position:fixed; left:50%; bottom:20px; z-index:50;
+    width:min(430px, calc(100vw - 28px));
+    background:var(--bilhete); color:var(--bilhete-texto);
+    border-left:3px solid var(--dourado);
+    box-shadow:0 12px 34px var(--sombra);
+    padding:15px 18px;
+    font-family:"Caveat",cursive; font-size:24px; line-height:1.25;
+    opacity:0; pointer-events:none;
+    transform:translateX(-50%) translateY(14px) rotate(-.6deg);
+    transition:opacity .35s ease, transform .35s cubic-bezier(.2,.8,.3,1);
+  }
+  .aviso-legenda[data-mostra="sim"]{
+    opacity:1; pointer-events:auto; cursor:pointer;
+    transform:translateX(-50%) translateY(0) rotate(-.6deg);
+  }
+
   /* ---------- última página: o instrumento ---------- */
   .contrato{
     background:var(--bilhete); color:var(--bilhete-texto);
@@ -354,10 +372,15 @@
   <section id="final" hidden></section>
 </div>
 
+<div class="aviso-legenda" id="aviso-legenda" role="status" aria-live="polite"></div>
+
 <script>
 /* ============================================================
    TROQUE AQUI
    ============================================================ */
+
+// Quanto tempo a legenda fica na tela, em milissegundos.
+const DURACAO_LEGENDA = 3800;
 
 // Paleta final: "carta", "veludo" ou "amanhecer".
 const PALETA = "carta";
@@ -518,6 +541,15 @@ function vira(carta){
   }
 }
 
+const aviso = $("aviso-legenda");
+let avisoTimer;
+
+function escondeAviso(){
+  clearTimeout(avisoTimer);
+  aviso.dataset.mostra = "nao";
+}
+aviso.addEventListener("click", escondeAviso);
+
 function mostraLegenda(texto){
   const cx = $("legendas");
   cx.querySelector(".dica")?.remove();
@@ -525,9 +557,15 @@ function mostraLegenda(texto){
   p.className = "legenda";
   p.textContent = texto;
   cx.appendChild(p);
+
+  aviso.textContent = texto;
+  aviso.dataset.mostra = "sim";
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(escondeAviso, DURACAO_LEGENDA);
 }
 
 function fecha(){
+  escondeAviso();
   $("jogo").hidden = true;
   const f = $("final");
   f.hidden = false;
